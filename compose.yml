@@ -1,0 +1,73 @@
+services:
+
+  init:
+    image: ${TMOVE_DOCKER_REGISTRY}/move:${TMOVE_VERSION}
+    entrypoint: ["moveCreateClientDB.sh", "--customerno", "1", "--orderno", "1", "--name", "Tolerant", "--protocolPath", "/opt/tolerant/protocols", "--mkdir"]
+    mem_limit: 1g
+    mem_reservation: 512M
+    # Uncomment the below line and set user and group id (from host system) to use it in container
+    # user: "$UID:$GID"
+    cpus: 4
+    volumes:
+      # persist move logs
+      - move-logs:/opt/tolerant/logs
+      # Example for custom configuration via volume:
+      - move-config:/opt/tolerant/config
+      # Example for custom data via volume
+      - move-data:/opt/tolerant/data
+      # Example for custom protocols via volume
+      - move-protocols:/opt/tolerant/protocols
+    environment:
+      # number of processors to be used by the JVM
+      - JVM_OPT_ACTIVE_PROCESSOR_COUNT=4
+      # Set the min and max ram percentage for the JVM
+      - JVM_OPT_MIN_RAM_PERCENTAGE=50
+      - JVM_OPT_MAX_RAM_PERCENTAGE=80
+      - TZ=${TZ}
+      # If no prometheus export is wanted, set to false
+      - TL_PROMETHEUS_METRICS_ENABLED=false
+      - METRICS_ENABLED=false
+      # comment this line in to change the logging profile. possible values: anonymized, console, request, jdbc or multi-project
+      # - LOGGING_PROFILE=console
+
+  batch:
+    image: ${TMOVE_DOCKER_REGISTRY}/move:${TMOVE_VERSION}
+    command: examples/move_batch_example/config/movebatch.xml moveProject-1 moveProfile-1
+    mem_limit: 6g
+    mem_reservation: 2g
+    # Uncomment the below line and set user and group id (from host system) to use it in container
+    # user: "$UID:$GID"
+    cpus: 4
+    volumes:
+      # persist move logs
+      - move-logs:/opt/tolerant/logs
+      # Example for custom configuration via volume:
+      - move-config:/opt/tolerant/config
+      # Example for custom data via volume
+      - move-data:/opt/tolerant/data
+      # Example for custom protocols via volume
+      - move-protocols:/opt/tolerant/protocols
+    environment:
+      # number of processors to be used by the JVM
+      - JVM_OPT_ACTIVE_PROCESSOR_COUNT=4
+      # Set the min and max ram percentage for the JVM
+      - JVM_OPT_MIN_RAM_PERCENTAGE=50
+      - JVM_OPT_MAX_RAM_PERCENTAGE=80
+      - TZ=${TZ}
+      # If no prometheus export is wanted, set to false
+      - TL_PROMETHEUS_METRICS_ENABLED=false
+      - METRICS_ENABLED=false
+      # comment this line in to change the logging profile. possible values: anonymized, console, request, jdbc or multi-project
+      # - LOGGING_PROFILE=console
+    depends_on:
+      init:
+        condition: service_completed_successfully
+
+volumes:
+  move-logs:
+  move-protocols:
+  # Examples for external created volumes with custom configuration and data
+  move-config:
+  #   external: true
+  move-data:
+  #   external: true
